@@ -1,0 +1,156 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "Access API - Face Recognition",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/api/recognizeFace": {
+        "post": {
+          "description": "return an array with all the previous face reognized so far",
+          "consumes": [
+             "application/json; charset=UTF-8"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "name": "key_enviroment_url",
+              "in": "url",
+              "description": "name of the enviroment",
+              "required": true
+            },
+            {
+              "name": "face42",
+              "in": "body",
+              "description": "string64 image converted",
+              "required": true
+            },{
+                "name": "key_enviroment",
+                "in": "body",
+                "description": "a key value which identifyes your enviroment",
+                "required": true
+              }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful operation"
+            }
+          }
+        }
+      },
+      "/api/update_face_name": {
+        "post": {
+          "description": "Grants access to an user",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "name": "key_enviroment_url",
+              "in": "url",
+              "description": "name of the enviroment",
+              "required": true
+            }, {
+              "name": "new_name",
+              "in": "body",
+              "description": "JSON data for the api",
+              "required": true
+            
+            }, {
+              "name": "uuid",
+              "in": "body",
+              "description": "JSON data for the api",
+              "required": true
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User granted access"
+            },
+            "400": {
+              "description": "Invalid request data"
+            }
+          }
+        }
+      },
+      "/api/save": {
+        "post": {
+          "description": "Grants access to an user",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "name": "access data",
+              "in": "body",
+              "description": "JSON data for the api",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/AccessData"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User granted access"
+            },
+            "400": {
+              "description": "Invalid request data"
+            }
+          }
+        }
+      },
+      "/api/load": {
+        "post": {
+          "description": "Grants access to an user",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "name": "access data",
+              "in": "body",
+              "description": "JSON data for the api",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/AccessData"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User granted access"
+            },
+            "400": {
+              "description": "Invalid request data"
+            }
+          }
+        }
+      }
+    },
+    
+    "definitions": {
+      "AccessData": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "server": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }

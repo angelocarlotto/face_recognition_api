@@ -1,0 +1,6 @@
+Flask
+flask_cors
+face_recognition
+numpy
+flask_swagger_ui
+opencv-python
