@@ -4,3 +4,4 @@ face_recognition
 numpy
 flask_swagger_ui
 opencv-python
+flask_swagger_ui
