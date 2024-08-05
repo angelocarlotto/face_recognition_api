@@ -1,3 +1,4 @@
+dlib
 Flask
 flask_cors
 face_recognition
