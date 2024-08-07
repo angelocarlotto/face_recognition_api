@@ -166,7 +166,7 @@ def getface_encoding(known_faces_env,enviroment,imageToProess):
 
 
 SWAGGER_URL="/swagger"
-API_URL="/static/swagger.json"
+API_URL="face_login_api/static/swagger.json"
 
 swagger_ui_blueprint = get_swaggerui_blueprint(
     SWAGGER_URL,

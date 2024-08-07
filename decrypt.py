@@ -1,7 +1,16 @@
+import webbrowser
 
+import urllib3
+url = 'https://drivetest.ca/dtbookingngapp/viewBookings'
+
+# Open URL in a new tab, if a browser window is already open.
+webbrowser.open_new_tab(url)
+
+# Open URL in new window, raising the window if possible.
+#webbrowser.open_new(url)
 
 # c0626-04308-60515
-
+#https://drivetest.ca/dtbookingngapp/viewBookings
 # https://drivetest.ca/booking/v1/driver/email
 
 # {
