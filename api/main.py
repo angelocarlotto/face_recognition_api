@@ -26,7 +26,18 @@ def save():
         if "key_enviroment_url" not in request.args:
             return  jsonify("you must especify the key_enviroment"), 400
         
+        
         key_enviroment_url=request.args["key_enviroment_url"]
+        
+        if key_enviroment_url not in known_faces:
+            known_faces[key_enviroment_url]=[]
+        
+        if not os.path.isdir(os.path.join("enviroments",key_enviroment_url)):
+            os.mkdir(os.path.join("enviroments",key_enviroment_url))
+                            
+        if not os.path.isdir(os.path.join("enviroments",key_enviroment_url,"faces")):
+            os.mkdir(os.path.join("enviroments",key_enviroment_url,"faces"))
+            
                 
         with open(os.path.join("enviroments",key_enviroment_url,'dataset_faces.dat'), 'wb') as f:
             pickle.dump(known_faces[key_enviroment_url], f)
