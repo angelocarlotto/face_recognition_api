@@ -15,6 +15,10 @@ app = Flask(__name__)
 CORS(app)
 
 known_faces={}
+@app.route("/api/hi",methods=["GET"])
+def save():
+    return  jsonify("i am allive"), 200
+
 @app.route("/api/save",methods=["GET"])
 def save():
 
@@ -166,7 +170,7 @@ def getface_encoding(known_faces_env,enviroment,imageToProess):
 
 
 SWAGGER_URL="/swagger"
-API_URL="app/face_login_api/static/swagger.json"
+API_URL="static/swagger.json"
 
 swagger_ui_blueprint = get_swaggerui_blueprint(
     SWAGGER_URL,
