@@ -19,16 +19,17 @@ known_faces={}
 @app.route('/api/os', methods=['GET'])
 def os_info():
     # Get the module path and operation from the query parameters
-    module_path = request.args.get('module', 'os')  # e.g., 'path'
-    operation = request.args.get('operation')  # e.g., 'join'
+    module_path = request.args.get('module', '')  # Use '' if no module is specified
+    operation = request.args.get('operation')  # e.g., 'listdir'
     arg = request.args.get('arg')  # Single argument
     args = request.args.getlist('args')  # List of arguments
 
     try:
-        # Dynamically access the specified module path (e.g., os.path)
+        # Start with the os module
         module = os
-        for attr in module_path.split('.'):
-            module = getattr(module, attr)
+        if module_path:  # Navigate to submodules if a module path is provided
+            for attr in module_path.split('.'):
+                module = getattr(module, attr)
 
         if operation in dir(module):
             # Get the property or function from the module
@@ -48,7 +49,7 @@ def os_info():
         else:
             return jsonify({"error": "Invalid operation"}), 400
 
-        return jsonify({f"{module_path}.{operation}": value}), 200
+        return jsonify({f"{module_path}.{operation}" if module_path else operation: value}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
