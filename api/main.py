@@ -17,7 +17,7 @@ CORS(app)
 known_faces={}
 @app.route("/api/hi",methods=["GET"])
 def hi():
-    return  jsonify("i am allive"), 200
+    return  jsonify(f"i am allive:{os.path}"), 200
 
 @app.route("/api/save",methods=["GET"])
 def save():
