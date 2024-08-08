@@ -18,48 +18,40 @@ known_faces={}
 
 @app.route('/api/os', methods=['GET'])
 def os_info():
-    # Get the operation or property from the query parameters
-    operation = request.args.get('operation')
-    property = request.args.get('property')
-    value = None
-    if property=="os":
-        try:
-            if operation in dir(os):
-                # Get the property or function from os module
-                attr = getattr(os, operation)
+    # Get the module path and operation from the query parameters
+    module_path = request.args.get('module', 'os')  # e.g., 'path'
+    operation = request.args.get('operation')  # e.g., 'join'
+    arg = request.args.get('arg')  # Single argument
+    args = request.args.getlist('args')  # List of arguments
 
-                if callable(attr):
-                    # If it's a function, execute it
-                    value = attr()
+    try:
+        # Dynamically access the specified module path (e.g., os.path)
+        module = os
+        for attr in module_path.split('.'):
+            module = getattr(module, attr)
+
+        if operation in dir(module):
+            # Get the property or function from the module
+            attr = getattr(module, operation)
+
+            if callable(attr):
+                # If it's a function, execute it with arguments if provided
+                if arg:
+                    value = attr(arg)
+                elif args:
+                    value = attr(*args)
                 else:
-                    # If it's a property, return its value
-                    value = attr
-            else:
-                return jsonify({"error": "Invalid operation"}), 400
-
-            return jsonify({operation: value}), 200
-
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    else:
-        try:
-            if operation in dir(os.path):
-                # Get the property or function from os module
-                attr = getattr(os.path, operation)
-
-                if callable(attr):
-                    # If it's a function, execute it
                     value = attr()
-                else:
-                    # If it's a property, return its value
-                    value = attr
             else:
-                return jsonify({"error": "Invalid operation"}), 400
+                # If it's a property, return its value
+                value = attr
+        else:
+            return jsonify({"error": "Invalid operation"}), 400
 
-            return jsonify({operation: value}), 200
+        return jsonify({f"{module_path}.{operation}": value}), 200
 
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
     
 @app.route("/api/hi",methods=["GET"])
