@@ -15,6 +15,33 @@ app = Flask(__name__)
 CORS(app)
 
 known_faces={}
+
+@app.route('/api/os', methods=['GET'])
+def os_info():
+    # Get the operation or property from the query parameters
+    operation = request.args.get('operation')
+    value = None
+
+    try:
+        if operation in dir(os):
+            # Get the property or function from os module
+            attr = getattr(os, operation)
+
+            if callable(attr):
+                # If it's a function, execute it
+                value = attr()
+            else:
+                # If it's a property, return its value
+                value = attr
+        else:
+            return jsonify({"error": "Invalid operation"}), 400
+
+        return jsonify({operation: value}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    
 @app.route("/api/hi",methods=["GET"])
 def hi():
     
