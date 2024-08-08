@@ -17,7 +17,13 @@ CORS(app)
 known_faces={}
 @app.route("/api/hi",methods=["GET"])
 def hi():
-    return  jsonify(f"i am allive:{os.path.curdir}"), 200
+    
+    if "arg"  in request.args:
+            arg=request.args["arg"]
+            return  jsonify(f"i am allive:{os[arg]}"), 200
+        
+        
+    return  jsonify(os.environ), 200
 
 @app.route("/api/save",methods=["GET"])
 def save():
