@@ -20,10 +20,10 @@ def hi():
     
     if "arg"  in request.args:
             arg=request.args["arg"]
-            return  jsonify(f"i am allive:{os.path[arg]}"), 200
+            return  jsonify(f"i am allive:{os.path.defpath[arg]}"), 200
         
         
-    return  jsonify(os.path), 200
+    return  jsonify(os.path.dirname()), 200
 
 @app.route("/api/save",methods=["GET"])
 def save():
