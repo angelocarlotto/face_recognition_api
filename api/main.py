@@ -29,9 +29,14 @@ def save():
         
         key_enviroment_url=request.args["key_enviroment_url"]
         
+        print(f"current patth:{os.path}")
+        
         if key_enviroment_url not in known_faces:
             known_faces[key_enviroment_url]=[]
         
+        if not os.path.isdir(os.path.join("enviroments")):
+            os.mkdir(os.path.join("enviroments"))
+            
         if not os.path.isdir(os.path.join("enviroments",key_enviroment_url)):
             os.mkdir(os.path.join("enviroments",key_enviroment_url))
                             
