@@ -17,9 +17,10 @@ RUN cd face_login_api
 
 
 #COPY entrypoint.sh .
-#RUN chmod +x entrypoint.sh
+RUN chmod +x face_login_api/entrypoint.sh
 
-RUN chmod -R 777 .
+#RUN chmod -R 777 .
 # Set the default command to run the application
 
-#ENTRYPOINT ["./entrypoint.sh"]
+#CMD [".", "venv/bin/activate", "&&", "flask", "run", "--host=0.0.0.0"]
+ENTRYPOINT ["face_login_api/entrypoint.sh"]
