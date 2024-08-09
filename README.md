@@ -2,7 +2,8 @@
 
 When you have the api running to access the documentation the address will be /apidocs, eg: http://127.0.0.1:5001/apidocs
 
-# ![1723172630960](https://file+.vscode-resource.vscode-cdn.net/Users/angelocarlotto/Desktop/github/flask_demo/image/README/1723172630960.png)Instalation
+# Instalation
+![1723172630960](image/README/1723172630960.png)
 
 All the requirementes os the modules are listed on the file requirements.txt
 
