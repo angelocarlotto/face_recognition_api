@@ -1,7 +1,7 @@
-#sudo docker build  -t "face_login_api_3rd:Dockerfile" .
-#docker run --rm  -p 5001:5000  face_login_api_3rd:Dockerfile
+#sudo docker build  -t "face_login_api_3rd:v0.1" .
+#docker run --rm  -p 5001:5000  face_login_api_3rd:v0.1
 # Use the official Ubuntu base image
-FROM face_login_api_2nd:Dockerfile
+FROM face_login_api_2nd:v0.1
 
 ARG CACHEBUST=1
 

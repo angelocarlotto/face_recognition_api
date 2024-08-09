@@ -1,6 +1,6 @@
-#sudo docker build --build-arg CACHEBUST=$(date +%s) -t "face_login_api_full:Dockerfile" .
-#sudo docker build  -t "face_login_api_full:Dockerfile" .
-#docker stop $(docker ps -qa)  &&  docker run --rm  -p 5001:5000  face_login_api_full:Dockerfile
+#sudo docker build --build-arg CACHEBUST=$(date +%s) -t "face_login_api_full:v0.1" .
+#sudo docker build  -t "face_login_api_full:v0.1" .
+#docker stop $(docker ps -qa)  &&  docker run --rm  -p 5001:5000  face_login_api_full:v0.1
 
 # Use the official Ubuntu base image
 FROM ubuntu
