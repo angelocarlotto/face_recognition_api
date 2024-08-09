@@ -41,7 +41,7 @@ WORKDIR /app
 RUN python3 -m venv venv && \
     . venv/bin/activate && \
     pip3 install --upgrade pip && \
-    pip3 install Flask flask_cors flask_swagger_ui opencv-python opencv-python-headless wheel dlib face_recognition setuptools
+    pip3 install Flask flask_cors flasgger opencv-python opencv-python-headless wheel dlib face_recognition setuptools
 
 
 RUN echo "Cache bust value: ${CACHEBUST}" && git clone https://github.com/angelocarlotto/face_login_api.git

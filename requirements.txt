@@ -1,10 +1,9 @@
-cmake
-wheel
-dlib
 Flask
 flask_cors
-face_recognition
-numpy
-flask_swagger_ui
+flasgger
 opencv-python
-flask_swagger_ui
+opencv-python-headless
+wheel
+dlib
+face_recognition
+setuptools

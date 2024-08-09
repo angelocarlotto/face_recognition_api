@@ -8,16 +8,53 @@ import uuid
 import datetime
 import os
 import pickle
-from flask_swagger_ui import get_swaggerui_blueprint
+from flasgger import Swagger
+
 
 app = Flask(__name__)
-    
+swagger = Swagger(app)
 CORS(app)
 
 known_faces={}
 
 @app.route('/api/os', methods=['GET'])
 def os_info():
+    """
+    Execute OS Module Operations
+    ---
+    parameters:
+      - name: module
+        in: query
+        type: string
+        required: false
+        description: "The submodule of the os module (e.g., 'path' for os.path). If not provided, defaults to the os module."
+      - name: operation
+        in: query
+        type: string
+        required: true
+        description: "The operation or method to perform (e.g., 'listdir' for os.listdir)."
+      - name: arg
+        in: query
+        type: string
+        required: false
+        description: "A single argument to pass to the operation."
+      - name: args
+        in: query
+        type: array
+        items:
+          type: string
+        required: false
+        description: "A list of arguments to pass to the operation. Use this for multiple arguments."
+    responses:
+      200:
+        description: "Successfully executed the OS operation."
+        schema:
+          type: object
+      400:
+        description: "Invalid operation or input."
+      500:
+        description: "Server error while processing the request."
+    """
     # Get the module path and operation from the query parameters
     module_path = request.args.get('module', '')  # Use '' if no module is specified
     operation = request.args.get('operation')  # e.g., 'listdir'
@@ -57,11 +94,43 @@ def os_info():
     
 @app.route("/api/hi",methods=["GET"])
 def hi():
+    """
+    This methods tells you if the api is live and runing at the especific endpoint
+    ---
+    responses:
+        200:
+            description: success if it return "i am alive"
+    """
     return  jsonify("i amm alive"), 200
 
 @app.route("/api/save",methods=["GET"])
 def save():
-
+    """
+    Save Known Faces to the Environment Directory
+    ---
+    parameters:
+      - name: key_enviroment_url
+        in: query
+        type: string
+        required: true
+        description: "The environment key URL used to save the face data. This key will be used to create a directory structure to store the face data."
+    responses:
+      200:
+        description: "Database saved successfully."
+        schema:
+          type: string
+          example: "database saved"
+      400:
+        description: "Missing or incorrect parameters."
+        schema:
+          type: string
+          example: "you must specify the key_enviroment"
+      500:
+        description: "Internal server error."
+        schema:
+          type: string
+          example: "Error message"
+    """
     try:
         if "key_enviroment_url" not in request.args:
             return  jsonify("you must especify the key_enviroment"), 400
@@ -91,6 +160,34 @@ def save():
 
 @app.route("/api/load",methods=["GET"])
 def load():
+    """
+    Load Known Faces from the Environment Directory
+    ---
+    parameters:
+      - name: key_enviroment_url
+        in: query
+        type: string
+        required: true
+        description: "The environment key URL used to load the face data. This key corresponds to the directory structure where the face data is stored."
+    responses:
+      200:
+        description: "Successfully loaded the face data."
+        schema:
+          type: array
+          items:
+            type: object
+            description: "A list of known faces loaded from the specified environment."
+      400:
+        description: "Missing or incorrect parameters."
+        schema:
+          type: string
+          example: "you must specify the key_enviroment"
+      500:
+        description: "Internal server error."
+        schema:
+          type: string
+          example: "Error message"
+    """    
     global known_faces
     if "key_enviroment_url" not in request.args:
         return  jsonify("you must especify the key_enviroment"), 400
@@ -104,6 +201,55 @@ def load():
 
 @app.route("/api/recognizeFace",methods=["POST"])
 def recognizeFace():
+    """
+    Recognize Faces from an Uploaded Image or Base64 Encoded String
+    ---
+    parameters:
+      - name: key_enviroment_url
+        in: query
+        type: string
+        required: true
+        description: "The environment key URL used to store and recognize the face data. This key will be used to create or reference an existing directory structure."
+      - name: files
+        in: formData
+        type: file
+        required: false
+        description: "The image file to process for face recognition. Either 'files' or 'face42' must be provided."
+      - name: face42
+        in: body
+        required: false
+        description: "Base64 encoded string of the image to process for face recognition. Either 'files' or 'face42' must be provided."
+        schema:
+          type: object
+          properties:
+            face42:
+              type: string
+              description: "Base64 encoded image string"
+    responses:
+      200:
+        description: "Successfully recognized faces in the image."
+        schema:
+          type: object
+          properties:
+            qtdFaceDetected:
+              type: integer
+              description: "Number of faces detected in the image."
+            faces_know:
+              type: array
+              description: "List of known faces."
+              items:
+                type: object
+      400:
+        description: "Missing or incorrect parameters."
+        schema:
+          type: string
+          example: "you must specify the key_enviroment"
+      500:
+        description: "Internal server error."
+        schema:
+          type: string
+          example: "Error message"
+    """
     try:
         if "key_enviroment_url" not in request.args:
             return  jsonify("you must especify the key_enviroment"), 400
@@ -143,6 +289,71 @@ def recognizeFace():
 
 @app.route("/api/update_face_name",methods=["POST"])
 def update_face_name():
+    """
+    Update the Name of a Recognized Face
+    ---
+    parameters:
+      - name: key_enviroment_url
+        in: query
+        type: string
+        required: true
+        description: "The environment key URL used to identify the environment containing the face data to be updated."
+      - name: body
+        in: body
+        required: true
+        description: "JSON object containing the UUID of the face to update and the new name."
+        schema:
+          type: object
+          required:
+            - uuid
+            - new_name
+          properties:
+            uuid:
+              type: string
+              description: "The unique identifier of the face whose name is to be updated."
+            new_name:
+              type: string
+              description: "The new name to assign to the face."
+    responses:
+      200:
+        description: "Successfully updated the face name."
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              uuid:
+                type: string
+                description: "The unique identifier of the face."
+              name:
+                type: string
+                description: "The updated name of the face."
+              qtd:
+                type: integer
+                description: "The number of times the face was detected."
+              first_detected:
+                type: string
+                description: "The timestamp of when the face was first detected."
+              last_detected:
+                type: string
+                description: "The timestamp of when the face was last detected."
+              last_know_shot:
+                type: string
+                description: "The path to the last known shot of the face."
+              encoded64_last_pic:
+                type: string
+                description: "The Base64 encoded string of the last known picture of the face."
+      400:
+        description: "Missing or incorrect parameters."
+        schema:
+          type: string
+          example: "you must specify the key_enviroment"
+      500:
+        description: "Internal server error."
+        schema:
+          type: string
+          example: "Error message"
+    """
     if "key_enviroment_url" not in request.args:
             return  jsonify("you must especify the key_enviroment"), 400
         
@@ -226,18 +437,6 @@ def getface_encoding(known_faces_env,enviroment,imageToProess):
 
 
 
-SWAGGER_URL="/swagger"
-API_URL="static/swagger.json"
-
-swagger_ui_blueprint = get_swaggerui_blueprint(
-    SWAGGER_URL,
-    API_URL,
-    config={
-        'app_name': 'Access API'
-    }
-)
-app.register_blueprint(swagger_ui_blueprint, url_prefix=SWAGGER_URL)
-
 
 if __name__=="__main__":
-    app.run(debug=True,host="0.0.0.0",port=8080)
+    app.run(debug=True,host="0.0.0.0",port=5001)
