@@ -1,5 +1,7 @@
+#sudo docker build  -t "face_login_api_3rd:Dockerfile" .
+#docker run --rm  -p 5001:5000  face_login_api_3rd:Dockerfile
 # Use the official Ubuntu base image
-FROM api_2nd:Dockerfile
+FROM face_login_api_2nd:Dockerfile
 
 ARG CACHEBUST=1
 
@@ -12,7 +14,7 @@ ENV FLASK_DEBUG=1
 EXPOSE 5000
 
 
-RUN echo "Cache bust value: ${CACHEBUST}" && git clone https://github.com/angelocarlotto/face_login_api.git
+RUN echo "Cache bust value: ${CACHEBUST}s" && git clone https://github.com/angelocarlotto/face_login_api.git
 
 
 #COPY entrypoint.sh .

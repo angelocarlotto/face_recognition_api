@@ -1,10 +1,11 @@
-FROM api_1th:Dockerfile
+#sudo docker build  -t "face_login_api_2nd:Dockerfile" .
+FROM face_login_api_1th:Dockerfile
 
 # Set the working directory
 WORKDIR /app
 
 # Install the Python packages from the requirements file
-RUN python3 -m venv venv && \
+RUN echo "cooment here to avoid cache" &&  python3 -m venv venv && \
     . venv/bin/activate && \
     pip3 install --upgrade pip && \
     pip3 install Flask flask_cors flasgger opencv-python opencv-python-headless wheel dlib face_recognition setuptools
