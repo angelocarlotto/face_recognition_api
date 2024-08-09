@@ -1,6 +1,6 @@
 #sudo docker build --build-arg CACHEBUST=$(date +%s) -t "api_full:Dockerfile" .
 #docker stop $(docker ps -qa)  &&  docker run --rm  -p 5001:5000  api_full:Dockerfile
-#docker stop $(docker ps -qa) 
+
 # Use the official Ubuntu base image
 FROM ubuntu
 
@@ -44,13 +44,13 @@ RUN python3 -m venv venv && \
     pip3 install Flask flask_cors flask_swagger_ui opencv-python opencv-python-headless wheel dlib face_recognition setuptools
 
 
-
 RUN echo "Cache bust value: ${CACHEBUST}" && git clone https://github.com/angelocarlotto/face_login_api.git
 RUN cd face_login_api
 
 RUN chmod +x face_login_api/entrypoint.sh
 
-RUN chmod -R 777 .
+RUN mkdir enviroments
+RUN chmod -R 777 enviroments
 # Set the default command to run the application
 
 ENTRYPOINT ["face_login_api/entrypoint.sh"]

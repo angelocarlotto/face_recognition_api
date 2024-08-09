@@ -13,13 +13,13 @@ EXPOSE 5000
 
 
 RUN echo "Cache bust value: ${CACHEBUST}" && git clone https://github.com/angelocarlotto/face_login_api.git
-RUN cd face_login_api
 
 
 #COPY entrypoint.sh .
 RUN chmod +x face_login_api/entrypoint.sh
 
-RUN chmod -R 777 .
+RUN mkdir enviroments
+RUN chmod -R 777 enviroments
 # Set the default command to run the application
 
 #CMD [".", "venv/bin/activate", "&&", "flask", "run", "--host=0.0.0.0"]
