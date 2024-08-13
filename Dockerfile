@@ -1,18 +1,29 @@
-# sudo docker build -t "angelocarlotto/face_login_ui:v1.0" .  
+#sudo docker build  -t "angelocarlotto/face_recognition_api:latest" .
+#docker push angelocarlotto/face_recognition_api:latest
+#docker run --rm  -p 5001:5000  angelocarlotto/face_recognition_api:vlatest
+# Use the official Ubuntu base image
+FROM face_login_api_2nd:v0.1
 
-#docker push angelocarlotto/face_login_ui:v1.0
+ARG CACHEBUST=1
 
-#docker run --rm -p 3001:3000 angelocarlotto/face_login_ui:v1.0
-
-FROM ubuntu
-
-RUN apt update
-
-RUN apt install -y nodejs git git-all npm
-
-RUN git clone https://github.com/angelocarlotto/face_login_ui.git && cd face_login_ui &&  npm install
+# Prevents prompts during package installations
+ENV DEBIAN_FRONTEND=noninteractive
+ENV FLASK_APP=face_login_api/api/main.py
+ENV FLASK_DEBUG=1
 
 
-WORKDIR face_login_ui
+EXPOSE 5000
 
-CMD ["npm","run","dev"]
+
+RUN echo "Cache bust value: ${CACHEBUST}23" && git clone https://github.com/angelocarlotto/face_login_api.git
+
+
+#COPY entrypoint.sh .
+RUN chmod +x face_login_api/entrypoint.sh
+
+RUN mkdir enviroments
+RUN chmod -R 777 enviroments
+# Set the default command to run the application
+
+#CMD [".", "venv/bin/activate", "&&", "flask", "run", "--host=0.0.0.0"]
+ENTRYPOINT ["face_login_api/entrypoint.sh"]
