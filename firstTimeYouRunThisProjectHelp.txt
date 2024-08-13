@@ -1,0 +1,9 @@
+Go to the folder of the project, on the terminal , then run this commands:
+    python3 -m venv venv
+    . venv/bin/activate
+    python3 api/main.py
+    pip3 install -r requirements.txt 
+Then on your browser go to:
+    http://127.0.0.1:5000/apidocs/
+Then go to:
+    https://face-login-ui.vercel.app/?api_url=http://127.0.0.1:5000&enviroment_name=angelo_classroom_2
