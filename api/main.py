@@ -101,7 +101,7 @@ def hi():
         200:
             description: success if it return "i am alive"
     """
-    return  jsonify("i amm alive"), 200
+    return  jsonify("I am alive"), 200
 
 @app.route("/api/save",methods=["GET"])
 def save():
@@ -214,15 +214,15 @@ def recognizeFace():
         in: formData
         type: file
         required: false
-        description: "The image file to process for face recognition. Either 'files' or 'face42' must be provided."
-      - name: face42
+        description: "The image file to process for face recognition. Either 'files' or 'imageToRecognize' must be provided."
+      - name: imageToRecognize
         in: body
         required: false
-        description: "Base64 encoded string of the image to process for face recognition. Either 'files' or 'face42' must be provided."
+        description: "Base64 encoded string of the image to process for face recognition. Either 'files' or 'imageToRecognize' must be provided."
         schema:
           type: object
           properties:
-            face42:
+            imageToRecognize:
               type: string
               description: "Base64 encoded image string"
     responses:
@@ -270,19 +270,20 @@ def recognizeFace():
             
         if  "files" in request.files :
             image64=request.files["files"]
-            image64.save(os.path.join("enviroments",key_enviroment_url,"imageToProcess.png"))
+            image64.save(os.path.join("enviroments",key_enviroment_url,"imageToProcess.jpeg"))
             #save file
-        elif "face42" in request.get_json() :
+        elif "imageToRecognize" in request.get_json() :
             data=request.get_json()
-            image64=data["face42"]
+            image64=data["imageToRecognize"]
             image64=image64.replace("data:image/jpeg;base64,","")
             image_64_decode = base64.b64decode(image64) 
 
-            with open(os.path.join("enviroments",key_enviroment_url, "imageToProcess.png"), "wb") as fh:
+            with open(os.path.join("enviroments",key_enviroment_url, "imageToProcess.jpeg"), "wb") as fh:
                 fh.write(image_64_decode) 
 
-        lastRegonizedFaces=getface_encoding(known_faces[key_enviroment_url],key_enviroment_url,"imageToProcess.png")
-        return  jsonify({"qtdFaceDetected":len(lastRegonizedFaces),"faces_know":remove_propertye(known_faces[key_enviroment_url])})
+        lastRegonizedFaces=getface_encoding(known_faces[key_enviroment_url],key_enviroment_url,"imageToProcess.jpeg")
+      
+        return  jsonify({"lastRegonizedFaces":lastRegonizedFaces,"faces_know":remove_propertye(known_faces[key_enviroment_url])})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -355,12 +356,12 @@ def update_face_name():
           example: "Error message"
     """
     if "key_enviroment_url" not in request.args:
-            return  jsonify("you must especify the key_enviroment"), 400
+      return  jsonify("you must especify the key_enviroment"), 400
         
     key_enviroment_url=request.args["key_enviroment_url"]
     
     if key_enviroment_url not in known_faces:
-        known_faces[key_enviroment_url]=[]
+      known_faces[key_enviroment_url]=[]
         
     try:
         data=request.get_json()
@@ -402,6 +403,7 @@ def getface_encoding(known_faces_env,enviroment,imageToProess):
     
     face_locations = face_recognition.face_locations(rgb_frame)
     face_encodings = face_recognition.face_encodings(rgb_frame,face_locations)
+    justRecognizedIdsAndLocation=[]
     for l,e in zip(face_locations,face_encodings):
         machs = face_recognition.compare_faces([ x["encoding_face"] for x in known_faces_env], e, tolerance=0.6)
         trueMatchIndexes=[i for i in range(0,len(machs),1) if machs[i]==True]
@@ -417,6 +419,7 @@ def getface_encoding(known_faces_env,enviroment,imageToProess):
                     encoded_string ="data:image/jpeg;base64,"+str( base64.b64encode(image_file.read()), encoding='ascii')
                 know_one["last_know_shot"]=path
                 know_one["encoded64_last_pic"]=encoded_string
+                justRecognizedIdsAndLocation.append({"uuid":know_one["uuid"],"location":l})
                 
         else:
             #means it is a new face detected
@@ -428,10 +431,10 @@ def getface_encoding(known_faces_env,enviroment,imageToProess):
                 encoded_string ="data:image/jpeg;base64,"+str( base64.b64encode(image_file.read()), encoding='ascii')
             obj["last_know_shot"]=path
             obj["encoded64_last_pic"]=encoded_string
-            
+            justRecognizedIdsAndLocation.append({"uuid":new_uuid,"location":l})
     
     # my_face_encoding now contains a universal 'encoding' of my facial features that can be compared to any other picture of a face!
-    return face_locations
+    return justRecognizedIdsAndLocation
 
   
 
