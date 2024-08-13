@@ -1,7 +1,9 @@
+import csv
+import io
 import cv2
 import face_recognition
 import base64
-from flask import Flask, request, send_file,jsonify
+from flask import Flask, Response, request, send_file,jsonify
 from flask_cors import CORS
 import numpy as np
 import uuid
@@ -288,6 +290,48 @@ def recognizeFace():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/download_csv",methods=["GET"])
+def download_csv():
+  """
+    This method will return a csv file with all the content form current enviroment
+    ---
+    parameters:
+      - name: key_enviroment_url
+        in: query
+        type: string
+        required: true
+        description: "The environment key URL used to store and recognize the face data. This key will be used to create or reference an existing directory structure."
+    responses:
+        200:
+            description: success if it return the file it self
+  """
+      
+  
+  try:
+    if "key_enviroment_url" not in request.args:
+        return  jsonify("you must especify the key_enviroment"), 400
+      
+    key_enviroment_url=request.args["key_enviroment_url"]
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write the header row (keys of the first dictionary)
+    writer.writerow(known_faces[key_enviroment_url][0].keys())
+
+    # Write data rows
+    for row in known_faces[key_enviroment_url]:
+        writer.writerow(row.values())
+
+    # Move the cursor to the start of the stream
+    output.seek(0)
+    return Response(output.getvalue(), mimetype='text/csv', headers={"Content-Disposition": f"attachment;filename=data_{key_enviroment_url}.csv"})
+  except Exception as e:
+    return jsonify({"error": str(e)}), 500
+    
+  
+
+   
 @app.route("/api/update_face_name",methods=["POST"])
 def update_face_name():
     """
