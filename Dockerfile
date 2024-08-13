@@ -1,5 +1,6 @@
-#sudo docker build  -t "face_login_api_3rd:v0.1" .
-#docker run --rm  -p 5001:5000  face_login_api_3rd:v0.1
+#sudo docker build  -t "angelocarlotto/face_recognition_api:v0.1" .
+#docker push angelocarlotto/face_recognition_api:v0.1
+#docker run --rm  -p 5001:5000  angelocarlotto/face_recognition_api:v0.1
 # Use the official Ubuntu base image
 FROM face_login_api_2nd:v0.1
 
@@ -14,7 +15,7 @@ ENV FLASK_DEBUG=1
 EXPOSE 5000
 
 
-RUN echo "Cache bust value: ${CACHEBUST}s" && git clone https://github.com/angelocarlotto/face_login_api.git
+RUN echo "Cache bust value: ${CACHEBUST}" && git clone https://github.com/angelocarlotto/face_login_api.git
 
 
 #COPY entrypoint.sh .
