@@ -1,8 +1,8 @@
-#sudo docker build  -t "angelocarlotto/face_recognition_api:latest" .
+#sudo docker build --build-arg CACHEBUST=$(date +%s) -t "angelocarlotto/face_recognition_api:latest" .
 #docker push angelocarlotto/face_recognition_api:latest
-#docker run --rm  -p 5001:5000  angelocarlotto/face_recognition_api:vlatest
+#docker run --rm  -p 5001:5000  angelocarlotto/face_recognition_api:latest
 # Use the official Ubuntu base image
-FROM face_login_api_2nd:v0.1
+FROM face_recognition_api_1th:v0.1
 
 ARG CACHEBUST=1
 

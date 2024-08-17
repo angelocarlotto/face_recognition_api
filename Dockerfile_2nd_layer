@@ -1,5 +1,5 @@
-#sudo docker build  -t "face_login_api_2nd:Dockerfile" .
-FROM face_login_api_1th:v0.1
+#sudo docker build  -t "face_recognition_api_1th:v0.1" .
+FROM face_recognition_api_1th:v0.1
 
 # Set the working directory
 WORKDIR /app

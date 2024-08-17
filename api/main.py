@@ -1,4 +1,5 @@
 import csv
+from functools import wraps
 import io
 import cv2
 import face_recognition
@@ -14,11 +15,60 @@ from flasgger import Swagger
 
 
 app = Flask(__name__)
-swagger = Swagger(app)
-CORS(app)
+swagger_config = {
+    "headers": [
+    ],
+    "specs": [
+        {
+            "endpoint": 'apispec_1',
+            "route": '/apispec_1.json',
+            "rule_filter": lambda rule: True,  # all in
+            "model_filter": lambda tag: True,  # all in
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    # "static_folder": "static",  # must be set by user
+    "swagger_ui": True,
+    "specs_route": "/"
+}
 
+swagger = Swagger(app,config=swagger_config)
+CORS(app)
+count=0
 known_faces={}
 
+# def validate_token(f):
+#     @wraps(f)
+#     def decorated_function(*args, **kwargs):
+#         token = request.headers.get('Authorization')
+#         if not token or token != 'ValidToken':
+#             return jsonify({"error": "Unauthorized"}), 401
+#         return f(*args, **kwargs)
+#     return decorated_function
+  
+  
+def validate_before_request(f):
+  @wraps(f)
+  def decorated_function(*args, **kwargs):
+      if "key_enviroment_url" not in request.args:
+        return  jsonify("you must especify the key_enviroment"), 401
+        
+      key_enviroment_url: str=request.args["key_enviroment_url"]
+
+      if key_enviroment_url not in known_faces:
+          known_faces[key_enviroment_url]=[]
+
+      if not os.path.isdir(os.path.join("enviroments")):
+          os.mkdir(os.path.join("enviroments"))
+          
+      if not os.path.isdir(os.path.join("enviroments",key_enviroment_url)):
+          os.mkdir(os.path.join("enviroments",key_enviroment_url))
+                          
+      if not os.path.isdir(os.path.join("enviroments",key_enviroment_url,"faces")):
+          os.mkdir(os.path.join("enviroments",key_enviroment_url,"faces"))
+      return f(*args, **kwargs)
+  return decorated_function
+        
 @app.route('/api/os', methods=['GET'])
 def os_info():
     """
@@ -96,6 +146,7 @@ def os_info():
     
 @app.route("/api/hi",methods=["GET"])
 def hi():
+    global count
     """
     This methods tells you if the api is live and runing at the especific endpoint
     ---
@@ -103,9 +154,12 @@ def hi():
         200:
             description: success if it return "i am alive"
     """
-    return  jsonify("I am alive"), 200
+    count+=1
+    returnStr=f"I am alive, and counting:{count}"
+    return  jsonify(returnStr), 200
 
 @app.route("/api/save",methods=["GET"])
+@validate_before_request
 def save():
     """
     Save Known Faces to the Environment Directory
@@ -134,25 +188,8 @@ def save():
           example: "Error message"
     """
     try:
-        if "key_enviroment_url" not in request.args:
-            return  jsonify("you must especify the key_enviroment"), 400
-        
-        
         key_enviroment_url=request.args["key_enviroment_url"]
         
-        if key_enviroment_url not in known_faces:
-            known_faces[key_enviroment_url]=[]
-        
-        if not os.path.isdir(os.path.join("enviroments")):
-            os.mkdir(os.path.join("enviroments"))
-            
-        if not os.path.isdir(os.path.join("enviroments",key_enviroment_url)):
-            os.mkdir(os.path.join("enviroments",key_enviroment_url))
-                            
-        if not os.path.isdir(os.path.join("enviroments",key_enviroment_url,"faces")):
-            os.mkdir(os.path.join("enviroments",key_enviroment_url,"faces"))
-            
-                
         with open(os.path.join("enviroments",key_enviroment_url,'dataset_faces.dat'), 'wb') as f:
             pickle.dump(known_faces[key_enviroment_url], f)
         
@@ -161,6 +198,7 @@ def save():
         return jsonify(e),200
 
 @app.route("/api/load",methods=["GET"])
+@validate_before_request
 def load():
     """
     Load Known Faces from the Environment Directory
@@ -201,7 +239,8 @@ def load():
         
     return jsonify(remove_propertye(known_faces[key_enviroment_url])),200
 
-@app.route("/api/recognizeFace",methods=["POST"])
+@app.route("/api/recognize_face",methods=["POST"])
+@validate_before_request
 def recognizeFace():
     """
     Recognize Faces from an Uploaded Image or Base64 Encoded String
@@ -253,22 +292,7 @@ def recognizeFace():
           example: "Error message"
     """
     try:
-        if "key_enviroment_url" not in request.args:
-            return  jsonify("you must especify the key_enviroment"), 400
-        
         key_enviroment_url=request.args["key_enviroment_url"]
-        
-        if key_enviroment_url not in known_faces:
-            known_faces[key_enviroment_url]=[]
-            
-        if not os.path.isdir(os.path.join("enviroments")):
-            os.mkdir(os.path.join("enviroments"))            
-        
-        if not os.path.isdir(os.path.join("enviroments",key_enviroment_url)):
-            os.mkdir(os.path.join("enviroments",key_enviroment_url))
-                            
-        if not os.path.isdir(os.path.join("enviroments",key_enviroment_url,"faces")):
-            os.mkdir(os.path.join("enviroments",key_enviroment_url,"faces"))
             
         if  "files" in request.files :
             image64=request.files["files"]
@@ -291,6 +315,7 @@ def recognizeFace():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/download_csv",methods=["GET"])
+@validate_before_request
 def download_csv():
   """
     This method will return a csv file with all the content form current enviroment
@@ -305,8 +330,6 @@ def download_csv():
         200:
             description: success if it return the file it self
   """
-      
-  
   try:
     if "key_enviroment_url" not in request.args:
         return  jsonify("you must especify the key_enviroment"), 400
@@ -333,6 +356,7 @@ def download_csv():
 
    
 @app.route("/api/update_face_name",methods=["POST"])
+@validate_before_request
 def update_face_name():
     """
     Update the Name of a Recognized Face
@@ -399,14 +423,9 @@ def update_face_name():
           type: string
           example: "Error message"
     """
-    if "key_enviroment_url" not in request.args:
-      return  jsonify("you must especify the key_enviroment"), 400
         
     key_enviroment_url=request.args["key_enviroment_url"]
     
-    if key_enviroment_url not in known_faces:
-      known_faces[key_enviroment_url]=[]
-        
     try:
         data=request.get_json()
         uuid=data["uuid"]
@@ -481,9 +500,5 @@ def getface_encoding(known_faces_env,enviroment,imageToProess):
     return justRecognizedIdsAndLocation
 
   
-
-
-
-
 if __name__=="__main__":
     app.run(debug=True,host="0.0.0.0",port=5001)
