@@ -291,10 +291,12 @@ def recognize_face():
     """
     try:
         key_enviroment_url=request.args["key_enviroment_url"]
-            
+        ipaddress=request.args["ipaddress"]
+        
+        nameIamgeToBeProceced:str=f"imageToProcess{ipaddress}.jpeg"
         if  "files" in request.files :
             image64=request.files["files"]
-            image64.save(os.path.join("enviroments",key_enviroment_url,"imageToProcess.jpeg"))
+            image64.save(os.path.join("enviroments",key_enviroment_url,nameIamgeToBeProceced))
             #save file
         elif "imageToRecognize" in request.get_json() :
             data=request.get_json()
@@ -302,10 +304,10 @@ def recognize_face():
             image64=image64.replace("data:image/jpeg;base64,","")
             image_64_decode = base64.b64decode(image64) 
 
-            with open(os.path.join("enviroments",key_enviroment_url, "imageToProcess.jpeg"), "wb") as fh:
+            with open(os.path.join("enviroments",key_enviroment_url, nameIamgeToBeProceced), "wb") as fh:
                 fh.write(image_64_decode) 
 
-        lastRegonizedFaces=getface_encoding(known_faces[key_enviroment_url],key_enviroment_url,"imageToProcess.jpeg")
+        lastRegonizedFaces=getface_encoding(known_faces[key_enviroment_url],key_enviroment_url,nameIamgeToBeProceced)
       
         return  jsonify({"lastRegonizedFaces":lastRegonizedFaces,"faces_know":remove_propertye(known_faces[key_enviroment_url])})
 
