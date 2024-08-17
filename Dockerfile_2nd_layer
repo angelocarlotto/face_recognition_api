@@ -1,4 +1,4 @@
-#sudo docker build  -t "face_recognition_api_1th:v0.1" .
+#sudo docker build  -t "face_recognition_api_2nd:v0.1" .
 FROM face_recognition_api_1th:v0.1
 
 # Set the working directory

@@ -155,7 +155,7 @@ def hi():
             description: success if it return "i am alive"
     """
     count+=1
-    returnStr=f"I am alive, and counting:{count}"
+    returnStr=f"I am alive & counting:{count}"
     return  jsonify(returnStr), 200
 
 @app.route("/api/save",methods=["GET"])
