@@ -7,7 +7,7 @@ import cv2
 
 
 class faceRecognize():
-    def __init__(self,enviroment,known_faces_env:[],encod, location,picture) :
+    def __init__(self,enviroment:str,known_faces_env:list['faceRecognize'],encod, location,picture) :
         new_uuid=uuid.uuid4().urn
         index=len(known_faces_env)
         self.index=index
@@ -20,28 +20,24 @@ class faceRecognize():
         self.last_detected=datetime.datetime.now()
         self.replicates_uuid=[]
         self.enviroment=enviroment
-        path=self.createFile(picture,location)
-        with open(path, "rb") as image_file:
-            encoded_string ="data:image/jpeg;base64,"+str( base64.b64encode(image_file.read()), encoding='ascii')
+        
+        [path,encoded_string]=self.createFile(picture,location)
         self.last_know_shot=path
         self.encoded64_last_pic=encoded_string
         self.first_know_shot=path
         self.encoded64_first_pic=encoded_string
 
-        
     def __str__(self):
         return f"{self.name}-({self.short_uuid})"
     
     def updateObject(self,picture,l):
         self.qtd+=1
         self.last_detected=datetime.datetime.now()
-        path=self.createFile(picture,l)
-        with open(path, "rb") as image_file:
-            encoded_string ="data:image/jpeg;base64,"+str( base64.b64encode(image_file.read()), encoding='ascii')
+        [path,encoded_string]=self.createFile(picture,l)
         self.last_know_shot=path
         self.encoded64_last_pic=encoded_string
     
-    def createFile(self,picture, l):
+    def createFile(self,picture, l)->tuple[str,str]:
         obj=self
         index=self.index
         ampliar=50
@@ -50,5 +46,8 @@ class faceRecognize():
         fileName=f'face_{index}_{obj.short_uuid}.jpeg'
         path=os.path.join("enviroments",self.enviroment, "faces",fileName)
         cv2.imwrite(path, cropped)
-        return path
+        
+        with open(path, "rb") as image_file:
+            encoded_string ="data:image/jpeg;base64,"+str( base64.b64encode(image_file.read()), encoding='ascii')
+        return path,encoded_string
 

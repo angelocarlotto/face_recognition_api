@@ -32,7 +32,7 @@ swagger_config = {
 
 swagger = Swagger(app,config=swagger_config)
 CORS(app)
-count=0
+count:int=0
 known_faces={}
 
 # def validate_token(f):
@@ -454,7 +454,7 @@ def update_face_name():
     except Exception as e:
           return jsonify({"error": str(e)}), 500
         
-def remove_propertye(data:[], exclude_property=["encoding_face"]):
+def remove_propertye(data:list[faceRecognize], exclude_property:list[str]=["encoding_face"]):
   """
   This method returns a the input array without especifics propertis on it's objects
   """
@@ -465,7 +465,7 @@ def remove_propertye(data:[], exclude_property=["encoding_face"]):
   return new_data
 
     
-def getface_encoding(known_faces_env,enviroment,imageToProess):
+def getface_encoding(known_faces_env:list[faceRecognize],enviroment:str,imageToProess:str)->[]:
     
     picture = face_recognition.load_image_file(os.path.join("enviroments",enviroment, imageToProess))
     
@@ -485,12 +485,12 @@ def getface_encoding(known_faces_env,enviroment,imageToProess):
             for x in trueMatchIndexes:
                 obj=known_faces_env[x]
                 obj.updateObject(picture,l)
-                justRecognizedIdsAndLocation.append({"uuid":obj.uuid,"location":l})
+                #justRecognizedIdsAndLocation.append({"uuid":obj.uuid,"location":l})
         else:
             #means it is a new face detected
             obj=faceRecognize(enviroment,known_faces_env,e,l,picture)
             known_faces_env.append(obj)
-            justRecognizedIdsAndLocation.append({"uuid":obj.uuid,"location":l})
+        justRecognizedIdsAndLocation.append({"uuid":obj.uuid,"location":l})
     # my_face_encoding now contains a universal 'encoding' of my facial features that can be compared to any other picture of a face!
     return justRecognizedIdsAndLocation
 
