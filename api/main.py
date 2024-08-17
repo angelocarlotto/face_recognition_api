@@ -7,12 +7,10 @@ import base64
 from flask import Flask, Response, request, send_file,jsonify
 from flask_cors import CORS
 import numpy as np
-import uuid
-import datetime
 import os
 import pickle
 from flasgger import Swagger
-
+from api.faceRecognize import faceRecognize
 
 app = Flask(__name__)
 swagger_config = {
@@ -241,7 +239,7 @@ def load():
 
 @app.route("/api/recognize_face",methods=["POST"])
 @validate_before_request
-def recognizeFace():
+def recognize_face():
     """
     Recognize Faces from an Uploaded Image or Base64 Encoded String
     ---
@@ -339,11 +337,12 @@ def download_csv():
     output = io.StringIO()
     writer = csv.writer(output)
 
+    arrayToBeSubmited=remove_propertye(known_faces[key_enviroment_url],["encoding_face","last_know_shot","first_know_shot"])
     # Write the header row (keys of the first dictionary)
-    writer.writerow(known_faces[key_enviroment_url][0].keys())
+    writer.writerow(arrayToBeSubmited[0].keys())
 
     # Write data rows
-    for row in known_faces[key_enviroment_url]:
+    for row in arrayToBeSubmited:
         writer.writerow(row.values())
 
     # Move the cursor to the start of the stream
@@ -352,8 +351,26 @@ def download_csv():
   except Exception as e:
     return jsonify({"error": str(e)}), 500
     
-  
-
+ 
+@app.route("/api/bind_replicante",methods=["POST"])
+@validate_before_request
+def bind_replicante():
+  """_summary_
+  ---
+  parameters:
+    - name: key_enviroment_url
+      in: query
+      type: string
+      required: true
+      description: "The environment key URL used to identify the environment containing the face data to be updated."
+  Returns:
+      _type_: _description_
+  """
+  #principal uuid
+  #replicante uuid
+  #find int the database the principal object
+  #append on the principal attr replicates_uuid the replicante uuid
+  pass
    
 @app.route("/api/update_face_name",methods=["POST"])
 @validate_before_request
@@ -431,29 +448,22 @@ def update_face_name():
         uuid=data["uuid"]
         new_name=data["new_name"]
         for x in known_faces[key_enviroment_url]:
-            if x["uuid"]==uuid:
-                x["name"]=new_name
-        #return  jsonify([{"uuid":x["uuid"],"name":x["name"],"qtd":x["qtd"],"first_detected":x["first_detected"],"last_detected":x["last_detected"],"last_know_shot":x["last_know_shot"],"encoded64_last_pic":x["encoded64_last_pic"]} for x in known_faces])
+            if x.uuid==uuid:
+                x.name=new_name
         return remove_propertye(known_faces[key_enviroment_url])
     except Exception as e:
           return jsonify({"error": str(e)}), 500
-def remove_propertye(data, exclude_property=["encoding_face"]):
+        
+def remove_propertye(data:[], exclude_property=["encoding_face"]):
+  """
+  This method returns a the input array without especifics propertis on it's objects
+  """
   new_data = []
   for item in data:
-    new_item = {k: v for k, v in item.items() if k not in exclude_property}
+    new_item = {k: v for k, v in vars(item).items() if k not in exclude_property}
     new_data.append(new_item)
   return new_data
 
-def createFile(frame,enviroment, countFrameIndex, l, uuid):
-    obj=[x for x in known_faces[enviroment] if x["uuid"]==uuid][0]
-    index=obj["index"]
-    ampliar=50
-    (top,right,bottom,left)=l
-    cropped = frame[top-ampliar if top-ampliar>=0 else top:bottom+ampliar,left-ampliar if left-ampliar>=0 else left or left:right+ampliar]
-    fileName=f'face_{index}_{obj["short_uuid"]}_{countFrameIndex}.jpeg'
-    path=os.path.join("enviroments",enviroment, "faces",fileName)
-    cv2.imwrite(path, cropped)
-    return path
     
 def getface_encoding(known_faces_env,enviroment,imageToProess):
     
@@ -468,34 +478,19 @@ def getface_encoding(known_faces_env,enviroment,imageToProess):
     face_encodings = face_recognition.face_encodings(rgb_frame,face_locations)
     justRecognizedIdsAndLocation=[]
     for l,e in zip(face_locations,face_encodings):
-        machs = face_recognition.compare_faces([ x["encoding_face"] for x in known_faces_env], e, tolerance=0.6)
+        machs = face_recognition.compare_faces([ facesFromInviroment.encoding_face for facesFromInviroment in known_faces_env], e, tolerance=0.6)
         trueMatchIndexes=[i for i in range(0,len(machs),1) if machs[i]==True]
         if len(trueMatchIndexes)>=1:
             #this is a problem because means the algorithm understand the face maths with more then one preivous face.
             for x in trueMatchIndexes:
-                know_one=known_faces_env[x]
-                know_one["qtd"]+=1
-                know_one["last_detected"]=datetime.datetime.now()
-                
-                path=createFile(picture,enviroment,2,l,know_one["uuid"])
-                with open(path, "rb") as image_file:
-                    encoded_string ="data:image/jpeg;base64,"+str( base64.b64encode(image_file.read()), encoding='ascii')
-                know_one["last_know_shot"]=path
-                know_one["encoded64_last_pic"]=encoded_string
-                justRecognizedIdsAndLocation.append({"uuid":know_one["uuid"],"location":l})
-                
+                obj=known_faces_env[x]
+                obj.updateObject(picture,l)
+                justRecognizedIdsAndLocation.append({"uuid":obj.uuid,"location":l})
         else:
             #means it is a new face detected
-            new_uuid=uuid.uuid4().urn
-            obj={"index":len(known_faces_env),"uuid":new_uuid,"short_uuid":new_uuid.split("-")[-1],"encoding_face":e,"name": f"annonymous_{len(known_faces_env)}","qtd":1,"first_detected":datetime.datetime.now(),"last_detected":datetime.datetime.now()}
+            obj=faceRecognize(enviroment,known_faces_env,e,l,picture)
             known_faces_env.append(obj)
-            path=createFile(picture,enviroment,2,l,new_uuid)
-            with open(path, "rb") as image_file:
-                encoded_string ="data:image/jpeg;base64,"+str( base64.b64encode(image_file.read()), encoding='ascii')
-            obj["last_know_shot"]=path
-            obj["encoded64_last_pic"]=encoded_string
-            justRecognizedIdsAndLocation.append({"uuid":new_uuid,"location":l})
-    
+            justRecognizedIdsAndLocation.append({"uuid":obj.uuid,"location":l})
     # my_face_encoding now contains a universal 'encoding' of my facial features that can be compared to any other picture of a face!
     return justRecognizedIdsAndLocation
 
