@@ -15,7 +15,7 @@ ENV FLASK_DEBUG=1
 EXPOSE 5000
 
 
-RUN echo "Cache bust value: ${CACHEBUST}23" && git clone https://github.com/angelocarlotto/face_login_api.git
+RUN echo "Cache bust value: ${CACHEBUST}" && git clone https://github.com/angelocarlotto/face_login_api.git
 
 
 #COPY entrypoint.sh .
