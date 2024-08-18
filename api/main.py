@@ -10,7 +10,6 @@ import numpy as np
 import os
 import pickle
 from flasgger import Swagger
-from api.faceRecognize import faceRecognize
 import base64
 import datetime
 import os
