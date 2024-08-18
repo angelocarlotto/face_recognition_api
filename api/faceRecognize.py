@@ -6,8 +6,8 @@ import uuid
 import cv2
 
 
-class faceRecognize():
-    def __init__(self,enviroment:str,known_faces_env:list['faceRecognize'],encod, location,picture) :
+class faceRecognize2():
+    def __init__(self,enviroment:str,known_faces_env:list['faceRecognize2'],encod, location,picture) :
         new_uuid=uuid.uuid4().urn
         index=len(known_faces_env)
         self.index=index
