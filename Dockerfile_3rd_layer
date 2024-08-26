@@ -24,4 +24,5 @@ RUN mkdir enviroments
 RUN chmod -R 777 enviroments
 # Set the default command to run the application
 
-#ENTRYPOINT ["face_recognition_api/entrypoint.sh"]
+#CMD [".", "venv/bin/activate", "&&", "flask", "run", "--host=0.0.0.0"]
+ENTRYPOINT ["face_recognition_api/entrypoint.sh"]

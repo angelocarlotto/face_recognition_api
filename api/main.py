@@ -7,7 +7,7 @@ from flask import Flask, Response, request, send_file,jsonify
 from flask_cors import CORS
 import numpy as np
 import pickle
-from flasgger import Swagger
+from flasgger import Swagger,swag_from
 import base64
 import datetime
 import os
@@ -89,6 +89,7 @@ known_faces={}
   
 def validate_before_request(f):
   @wraps(f)
+  
   def decorated_function(*args, **kwargs):
       if "key_enviroment_url" not in request.args:
         return  jsonify("you must especify the key_enviroment"), 401
@@ -110,43 +111,57 @@ def validate_before_request(f):
   return decorated_function
         
 @app.route('/api/os', methods=['GET'])
+@swag_from({
+    'summary': 'Get OS information',
+    'description': 'Allows dynamic interaction with the os module. Accepts module path and operation to perform.',
+    'parameters': [
+        {
+            'name': 'module',
+            'in': 'query',
+            'type': 'string',
+            'required': False,
+            'description': 'The module path (e.g., "os.path").'
+        },
+        {
+            'name': 'operation',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'The operation to perform on the module (e.g., "listdir").'
+        },
+        {
+            'name': 'arg',
+            'in': 'query',
+            'type': 'string',
+            'required': False,
+            'description': 'Single argument for the operation.'
+        },
+        {
+            'name': 'args',
+            'in': 'query',
+            'type': 'array',
+            'items': {'type': 'string'},
+            'required': False,
+            'description': 'List of arguments for the operation.'
+        }
+    ],
+    'responses': {
+        '200': {
+            'description': 'Successful operation',
+            'examples': {
+                'application/json': {"operation": "result"}
+            }
+        },
+        '400': {
+            'description': 'Invalid operation'
+        },
+        '500': {
+            'description': 'Internal server error'
+        }
+    }
+})
 def os_info():
-    """
-    Execute OS Module Operations
-    ---
-    parameters:
-      - name: module
-        in: query
-        type: string
-        required: false
-        description: "The submodule of the os module (e.g., 'path' for os.path). If not provided, defaults to the os module."
-      - name: operation
-        in: query
-        type: string
-        required: true
-        description: "The operation or method to perform (e.g., 'listdir' for os.listdir)."
-      - name: arg
-        in: query
-        type: string
-        required: false
-        description: "A single argument to pass to the operation."
-      - name: args
-        in: query
-        type: array
-        items:
-          type: string
-        required: false
-        description: "A list of arguments to pass to the operation. Use this for multiple arguments."
-    responses:
-      200:
-        description: "Successfully executed the OS operation."
-        schema:
-          type: object
-      400:
-        description: "Invalid operation or input."
-      500:
-        description: "Server error while processing the request."
-    """
+    
     # Get the module path and operation from the query parameters
     module_path = request.args.get('module', '')  # Use '' if no module is specified
     operation = request.args.get('operation')  # e.g., 'listdir'
@@ -184,48 +199,53 @@ def os_info():
         return jsonify({"error": str(e)}), 500
     
 @app.route("/api/hi",methods=["GET"])
+@swag_from({
+    'summary': 'Simple health check endpoint',
+    'description': 'Returns a simple message with a count of how many times the endpoint has been hit.',
+    'responses': {
+        '200': {
+            'description': 'Successful response',
+            'examples': {
+                'application/json': 'I am alive & counting: 1'
+            }
+        }
+    }
+})
 def hi():
     global count
-    """
-    This methods tells you if the api is live and runing at the especific endpoint
-    ---
-    responses:
-        200:
-            description: success if it return "i am alive"
-    """
+   
     count+=1
     returnStr=f"I am alive & counting:{count}"
     return  jsonify(returnStr), 200
 
 @app.route("/api/save",methods=["GET"])
 @validate_before_request
+@swag_from({
+    'summary': 'Save the known faces data',
+    'description': 'Saves the face recognition data to a file.',
+    'parameters': [
+        {
+            'name': 'key_enviroment_url',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'The key for the environment to save the data.'
+        }
+    ],
+    'responses': {
+        '200': {
+            'description': 'Database saved',
+            'examples': {
+                'application/json': 'database saved'
+            }
+        },
+        '500': {
+            'description': 'Internal server error'
+        }
+    }
+})
 def save():
-    """
-    Save Known Faces to the Environment Directory
-    ---
-    parameters:
-      - name: key_enviroment_url
-        in: query
-        type: string
-        required: true
-        description: "The environment key URL used to save the face data. This key will be used to create a directory structure to store the face data."
-    responses:
-      200:
-        description: "Database saved successfully."
-        schema:
-          type: string
-          example: "database saved"
-      400:
-        description: "Missing or incorrect parameters."
-        schema:
-          type: string
-          example: "you must specify the key_enviroment"
-      500:
-        description: "Internal server error."
-        schema:
-          type: string
-          example: "Error message"
-    """
+    
     try:
         key_enviroment_url=request.args["key_enviroment_url"]
         
@@ -238,35 +258,36 @@ def save():
 
 @app.route("/api/load",methods=["GET"])
 @validate_before_request
+@swag_from({
+    'summary': 'Load the known faces data',
+    'description': 'Loads the face recognition data from a file.',
+    'parameters': [
+        {
+            'name': 'key_enviroment_url',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'The key for the environment to load the data.'
+        }
+    ],
+    'responses': {
+        '200': {
+            'description': 'Data loaded successfully',
+            'examples': {
+                'application/json': 'Loaded data example here'
+            }
+        },
+        '400': {
+            'description': 'Invalid key_enviroment'
+        },
+        '500': {
+            'description': 'Internal server error'
+        }
+    }
+})
+
 def load():
-    """
-    Load Known Faces from the Environment Directory
-    ---
-    parameters:
-      - name: key_enviroment_url
-        in: query
-        type: string
-        required: true
-        description: "The environment key URL used to load the face data. This key corresponds to the directory structure where the face data is stored."
-    responses:
-      200:
-        description: "Successfully loaded the face data."
-        schema:
-          type: array
-          items:
-            type: object
-            description: "A list of known faces loaded from the specified environment."
-      400:
-        description: "Missing or incorrect parameters."
-        schema:
-          type: string
-          example: "you must specify the key_enviroment"
-      500:
-        description: "Internal server error."
-        schema:
-          type: string
-          example: "Error message"
-    """    
+    
     global known_faces
     if "key_enviroment_url" not in request.args:
         return  jsonify("you must especify the key_enviroment"), 400
@@ -280,56 +301,59 @@ def load():
 
 @app.route("/api/recognize_face",methods=["POST"])
 @validate_before_request
+@swag_from({
+    'summary': 'Recognize a face in an uploaded image',
+    'description': 'Recognizes and processes a face from a provided image.',
+    'parameters': [
+        {
+            'name': 'key_enviroment_url',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'The key for the environment.'
+        },
+        {
+            'name': 'ipaddress',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'IP address of the client.'
+        },
+        {
+            'name': 'files',
+            'in': 'formData',
+            'type': 'file',
+            'required': False,
+            'description': 'Image file to process.'
+        },
+        {
+            'name': 'imageToRecognize',
+            'in': 'body',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'imageToRecognize': {'type': 'string', 'description': 'Base64 encoded image data'},
+                    'nameNewFace': {'type': 'string', 'description': 'Name for the new face'}
+                }
+            },
+            'required': False
+        }
+    ],
+    'responses': {
+        '200': {
+            'description': 'Faces recognized successfully',
+            'examples': {
+                'application/json': {"lastRegonizedFaces": [], "faces_know": []}
+            }
+        },
+        '500': {
+            'description': 'Internal server error'
+        }
+    }
+})
+
 def recognize_face():
-    """
-    Recognize Faces from an Uploaded Image or Base64 Encoded String
-    ---
-    parameters:
-      - name: key_enviroment_url
-        in: query
-        type: string
-        required: true
-        description: "The environment key URL used to store and recognize the face data. This key will be used to create or reference an existing directory structure."
-      - name: files
-        in: formData
-        type: file
-        required: false
-        description: "The image file to process for face recognition. Either 'files' or 'imageToRecognize' must be provided."
-      - name: imageToRecognize
-        in: body
-        required: false
-        description: "Base64 encoded string of the image to process for face recognition. Either 'files' or 'imageToRecognize' must be provided."
-        schema:
-          type: object
-          properties:
-            imageToRecognize:
-              type: string
-              description: "Base64 encoded image string"
-    responses:
-      200:
-        description: "Successfully recognized faces in the image."
-        schema:
-          type: object
-          properties:
-            qtdFaceDetected:
-              type: integer
-              description: "Number of faces detected in the image."
-            faces_know:
-              type: array
-              description: "List of known faces."
-              items:
-                type: object
-      400:
-        description: "Missing or incorrect parameters."
-        schema:
-          type: string
-          example: "you must specify the key_enviroment"
-      500:
-        description: "Internal server error."
-        schema:
-          type: string
-          example: "Error message"
-    """
+   
     try:
         key_enviroment_url=request.args["key_enviroment_url"]
         ipaddress=request.args["ipaddress"]
@@ -358,20 +382,33 @@ def recognize_face():
 
 @app.route("/api/download_csv",methods=["GET"])
 @validate_before_request
+@swag_from({
+    'summary': 'Download face recognition data as CSV',
+    'description': 'Generates and downloads face recognition data in CSV format.',
+    'parameters': [
+        {
+            'name': 'key_enviroment_url',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'The key for the environment to generate CSV.'
+        }
+    ],
+    'responses': {
+        '200': {
+            'description': 'CSV file download',
+            'examples': {
+                'text/csv': 'CSV file content here'
+            }
+        },
+        '500': {
+            'description': 'Internal server error'
+        }
+    }
+})
+
 def download_csv():
-  """
-    This method will return a csv file with all the content form current enviroment
-    ---
-    parameters:
-      - name: key_enviroment_url
-        in: query
-        type: string
-        required: true
-        description: "The environment key URL used to store and recognize the face data. This key will be used to create or reference an existing directory structure."
-    responses:
-        200:
-            description: success if it return the file it self
-  """
+  
   try:
     if "key_enviroment_url" not in request.args:
         return  jsonify("you must especify the key_enviroment"), 400
@@ -397,18 +434,44 @@ def download_csv():
     
 @app.route("/api/bind_replicante",methods=["POST"])
 @validate_before_request
+@swag_from({
+    'summary': 'Bind a replicant face to a principal face',
+    'description': 'Associates a replicant face UUID with a principal face UUID in the environment.',
+    'parameters': [
+        {
+            'name': 'key_enviroment_url',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'The key for the environment.'
+        },
+        {
+            'name': 'body',
+            'in': 'body',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'uuid': {'type': 'string', 'description': 'UUID of the face to bind'}
+                }
+            },
+            'required': True
+        }
+    ],
+    'responses': {
+        '200': {
+            'description': 'Replicant bound successfully',
+            'examples': {
+                'application/json': 'Bound face data here'
+            }
+        },
+        '500': {
+            'description': 'Internal server error'
+        }
+    }
+})
+
 def bind_replicante():
-  """_summary_
-  ---
-  parameters:
-    - name: key_enviroment_url
-      in: query
-      type: string
-      required: true
-      description: "The environment key URL used to identify the environment containing the face data to be updated."
-  Returns:
-      _type_: _description_
-  """
+  
   key_enviroment_url=request.args["key_enviroment_url"]
   request_data=request.get_json()
   enviromentFaces:list[faceRecognize]=known_faces[key_enviroment_url]
@@ -421,73 +484,44 @@ def bind_replicante():
    
 @app.route("/api/delete_face",methods=["DELETE"])
 @validate_before_request
+@swag_from({
+    'summary': 'Delete a face from the environment',
+    'description': 'Deletes a face identified by UUID from the environment.',
+    'parameters': [
+        {
+            'name': 'key_enviroment_url',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'The key for the environment.'
+        },
+        {
+            'name': 'body',
+            'in': 'body',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'uuid': {'type': 'string', 'description': 'UUID of the face to delete'}
+                }
+            },
+            'required': True
+        }
+    ],
+    'responses': {
+        '200': {
+            'description': 'Face deleted successfully',
+            'examples': {
+                'application/json': 'Updated face data here'
+            }
+        },
+        '500': {
+            'description': 'Internal server error'
+        }
+    }
+})
+
 def delete_face():
-    """
-    Delete a face from the database
-    ---
-    parameters:
-      - name: key_enviroment_url
-        in: query
-        type: string
-        required: true
-        description: "The environment key URL used to identify the environment containing the face data to be updated."
-      - name: body
-        in: body
-        required: true
-        description: "JSON object containing the UUID of the face to update and the new name."
-        schema:
-          type: object
-          required:
-            - uuid
-            - new_name
-          properties:
-            uuid:
-              type: string
-              description: "The unique identifier of the face whose name is to be updated."
-            new_name:
-              type: string
-              description: "The new name to assign to the face."
-    responses:
-      200:
-        description: "Successfully updated the face name."
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              uuid:
-                type: string
-                description: "The unique identifier of the face."
-              name:
-                type: string
-                description: "The updated name of the face."
-              qtd:
-                type: integer
-                description: "The number of times the face was detected."
-              first_detected:
-                type: string
-                description: "The timestamp of when the face was first detected."
-              last_detected:
-                type: string
-                description: "The timestamp of when the face was last detected."
-              last_know_shot:
-                type: string
-                description: "The path to the last known shot of the face."
-              encoded64_last_pic:
-                type: string
-                description: "The Base64 encoded string of the last known picture of the face."
-      400:
-        description: "Missing or incorrect parameters."
-        schema:
-          type: string
-          example: "you must specify the key_enviroment"
-      500:
-        description: "Internal server error."
-        schema:
-          type: string
-          example: "Error message"
-    """
-        
+    
     key_enviroment_url=request.args["key_enviroment_url"]
     
     try:
@@ -504,72 +538,45 @@ def delete_face():
         
 @app.route("/api/update_face_name",methods=["POST"])
 @validate_before_request
+@swag_from({
+    'summary': 'Update a face name in the environment',
+    'description': 'Updates the name of a face identified by UUID in the environment.',
+    'parameters': [
+        {
+            'name': 'key_enviroment_url',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'The key for the environment.'
+        },
+        {
+            'name': 'body',
+            'in': 'body',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'uuid': {'type': 'string', 'description': 'UUID of the face'},
+                    'new_name': {'type': 'string', 'description': 'New name for the face'}
+                }
+            },
+            'required': True
+        }
+    ],
+    'responses': {
+        '200': {
+            'description': 'Face name updated successfully',
+            'examples': {
+                'application/json': 'Updated face data here'
+            }
+        },
+        '500': {
+            'description': 'Internal server error'
+        }
+    }
+})
+
 def update_face_name():
-    """
-    Update the Name of a Recognized Face
-    ---
-    parameters:
-      - name: key_enviroment_url
-        in: query
-        type: string
-        required: true
-        description: "The environment key URL used to identify the environment containing the face data to be updated."
-      - name: body
-        in: body
-        required: true
-        description: "JSON object containing the UUID of the face to update and the new name."
-        schema:
-          type: object
-          required:
-            - uuid
-            - new_name
-          properties:
-            uuid:
-              type: string
-              description: "The unique identifier of the face whose name is to be updated."
-            new_name:
-              type: string
-              description: "The new name to assign to the face."
-    responses:
-      200:
-        description: "Successfully updated the face name."
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              uuid:
-                type: string
-                description: "The unique identifier of the face."
-              name:
-                type: string
-                description: "The updated name of the face."
-              qtd:
-                type: integer
-                description: "The number of times the face was detected."
-              first_detected:
-                type: string
-                description: "The timestamp of when the face was first detected."
-              last_detected:
-                type: string
-                description: "The timestamp of when the face was last detected."
-              last_know_shot:
-                type: string
-                description: "The path to the last known shot of the face."
-              encoded64_last_pic:
-                type: string
-                description: "The Base64 encoded string of the last known picture of the face."
-      400:
-        description: "Missing or incorrect parameters."
-        schema:
-          type: string
-          example: "you must specify the key_enviroment"
-      500:
-        description: "Internal server error."
-        schema:
-          type: string
-          example: "Error message"
-    """
+    
         
     key_enviroment_url=request.args["key_enviroment_url"]
     
