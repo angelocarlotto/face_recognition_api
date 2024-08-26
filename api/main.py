@@ -1,13 +1,11 @@
 import csv
 from functools import wraps
 import io
-import cv2
 import face_recognition
 import base64
 from flask import Flask, Response, request, send_file,jsonify
 from flask_cors import CORS
 import numpy as np
-import os
 import pickle
 from flasgger import Swagger
 import base64
@@ -19,14 +17,14 @@ import cv2
 
 
 class faceRecognize():
-    def __init__(self,enviroment:str,known_faces_env:list['faceRecognize'],encod, location,picture) :
+    def __init__(self,enviroment:str,known_faces_env:list['faceRecognize'],encod, location,picture,nameNewFace) :
         new_uuid=uuid.uuid4().urn
         index=len(known_faces_env)
         self.index=index
         self.uuid=new_uuid
         self.short_uuid=new_uuid.split("-")[-1]
         self.encoding_face=encod
-        self.name=f"annonymous_{index}"
+        self.name=nameNewFace or  f"annonymous_{index}"
         self.qtd=1
         self.first_detected=datetime.datetime.now()
         self.last_detected=datetime.datetime.now()
@@ -88,15 +86,6 @@ CORS(app)
 count:int=0
 known_faces={}
 
-# def validate_token(f):
-#     @wraps(f)
-#     def decorated_function(*args, **kwargs):
-#         token = request.headers.get('Authorization')
-#         if not token or token != 'ValidToken':
-#             return jsonify({"error": "Unauthorized"}), 401
-#         return f(*args, **kwargs)
-#     return decorated_function
-  
   
 def validate_before_request(f):
   @wraps(f)
@@ -193,7 +182,6 @@ def os_info():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
     
 @app.route("/api/hi",methods=["GET"])
 def hi():
@@ -356,11 +344,12 @@ def recognize_face():
             image64=data["imageToRecognize"]
             image64=image64.replace("data:image/jpeg;base64,","")
             image_64_decode = base64.b64decode(image64) 
+            nameNewFace=data["nameNewFace"] if "nameNewFace" in data else None
 
             with open(os.path.join("enviroments",key_enviroment_url, nameIamgeToBeProceced), "wb") as fh:
                 fh.write(image_64_decode) 
 
-        lastRegonizedFaces=getface_encoding(known_faces[key_enviroment_url],key_enviroment_url,nameIamgeToBeProceced)
+        lastRegonizedFaces=getface_encoding(known_faces[key_enviroment_url],key_enviroment_url,nameIamgeToBeProceced,nameNewFace)
       
         return  jsonify({"lastRegonizedFaces":lastRegonizedFaces,"faces_know":remove_propertye(known_faces[key_enviroment_url])})
 
@@ -392,7 +381,7 @@ def download_csv():
     output = io.StringIO()
     writer = csv.writer(output)
 
-    arrayToBeSubmited=remove_propertye(known_faces[key_enviroment_url],["encoding_face","last_know_shot","first_know_shot"])
+    arrayToBeSubmited=keep_propertye(known_faces[key_enviroment_url], included_properties=["index","uuid","name","qtd","first_detected","last_detected","enviroment"])
     # Write the header row (keys of the first dictionary)
     writer.writerow(arrayToBeSubmited[0].keys())
 
@@ -406,7 +395,6 @@ def download_csv():
   except Exception as e:
     return jsonify({"error": str(e)}), 500
     
- 
 @app.route("/api/bind_replicante",methods=["POST"])
 @validate_before_request
 def bind_replicante():
@@ -421,12 +409,99 @@ def bind_replicante():
   Returns:
       _type_: _description_
   """
+  key_enviroment_url=request.args["key_enviroment_url"]
+  request_data=request.get_json()
+  enviromentFaces:list[faceRecognize]=known_faces[key_enviroment_url]
+  result=[x for x in enviromentFaces if x.uuid==request_data.uuid]
+  return  jsonify(result)
   #principal uuid
   #replicante uuid
   #find int the database the principal object
   #append on the principal attr replicates_uuid the replicante uuid
-  pass
    
+@app.route("/api/delete_face",methods=["DELETE"])
+@validate_before_request
+def delete_face():
+    """
+    Delete a face from the database
+    ---
+    parameters:
+      - name: key_enviroment_url
+        in: query
+        type: string
+        required: true
+        description: "The environment key URL used to identify the environment containing the face data to be updated."
+      - name: body
+        in: body
+        required: true
+        description: "JSON object containing the UUID of the face to update and the new name."
+        schema:
+          type: object
+          required:
+            - uuid
+            - new_name
+          properties:
+            uuid:
+              type: string
+              description: "The unique identifier of the face whose name is to be updated."
+            new_name:
+              type: string
+              description: "The new name to assign to the face."
+    responses:
+      200:
+        description: "Successfully updated the face name."
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              uuid:
+                type: string
+                description: "The unique identifier of the face."
+              name:
+                type: string
+                description: "The updated name of the face."
+              qtd:
+                type: integer
+                description: "The number of times the face was detected."
+              first_detected:
+                type: string
+                description: "The timestamp of when the face was first detected."
+              last_detected:
+                type: string
+                description: "The timestamp of when the face was last detected."
+              last_know_shot:
+                type: string
+                description: "The path to the last known shot of the face."
+              encoded64_last_pic:
+                type: string
+                description: "The Base64 encoded string of the last known picture of the face."
+      400:
+        description: "Missing or incorrect parameters."
+        schema:
+          type: string
+          example: "you must specify the key_enviroment"
+      500:
+        description: "Internal server error."
+        schema:
+          type: string
+          example: "Error message"
+    """
+        
+    key_enviroment_url=request.args["key_enviroment_url"]
+    
+    try:
+        data=request.get_json()
+        uuid=data["uuid"]
+        itemToBeRemoved=None
+        for x in known_faces[key_enviroment_url]:
+            if x.uuid==uuid:
+                itemToBeRemoved=x
+        known_faces[key_enviroment_url].remove(itemToBeRemoved)
+        return remove_propertye(known_faces[key_enviroment_url])
+    except Exception as e:
+          return jsonify({"error": str(e)}), 500
+        
 @app.route("/api/update_face_name",methods=["POST"])
 @validate_before_request
 def update_face_name():
@@ -509,18 +584,31 @@ def update_face_name():
     except Exception as e:
           return jsonify({"error": str(e)}), 500
         
-def remove_propertye(data:list[faceRecognize], exclude_property:list[str]=["encoding_face"]):
+def remove_propertye(data:list[faceRecognize],exclude_property:list[str]=["encoding_face"], included_properties:list[str]=[]):
+  #, included_properties:list[str]=["index","uuid","name","qtd","first_detected","last_detected","enviroment"]):
   """
   This method returns a the input array without especifics propertis on it's objects
   """
   new_data = []
   for item in data:
-    new_item = {k: v for k, v in vars(item).items() if k not in exclude_property}
+    #(len(included_properties)>0 and k in included_properties) or 
+    new_item = {k: v for k, v in vars(item).items() if  k not in exclude_property}
     new_data.append(new_item)
   return new_data
 
-    
-def getface_encoding(known_faces_env:list[faceRecognize],enviroment:str,imageToProess:str)->[]:
+def keep_propertye(data:list[faceRecognize], included_properties:list[str]=["index","uuid","name","qtd","first_detected","last_detected","enviroment"]):
+  #, included_properties:list[str]=["index","uuid","name","qtd","first_detected","last_detected","enviroment"]):
+  """
+  This method returns a the input array without especifics propertis on it's objects
+  """
+  new_data = []
+  for item in data:
+    #(len(included_properties)>0 and k in included_properties) or 
+    new_item = {k: v for k, v in vars(item).items() if  k  in included_properties}
+    new_data.append(new_item)
+  return new_data
+
+def getface_encoding(known_faces_env:list[faceRecognize],enviroment:str,imageToProess:str,nameNewFace:str)->[]:
     
     picture = face_recognition.load_image_file(os.path.join("enviroments",enviroment, imageToProess))
     
@@ -543,7 +631,7 @@ def getface_encoding(known_faces_env:list[faceRecognize],enviroment:str,imageToP
                 #justRecognizedIdsAndLocation.append({"uuid":obj.uuid,"location":l})
         else:
             #means it is a new face detected
-            obj=faceRecognize(enviroment,known_faces_env,e,l,picture)
+            obj=faceRecognize(enviroment,known_faces_env,e,l,picture,nameNewFace)
             known_faces_env.append(obj)
         justRecognizedIdsAndLocation.append({"uuid":obj.uuid,"location":l})
     # my_face_encoding now contains a universal 'encoding' of my facial features that can be compared to any other picture of a face!
