@@ -28,7 +28,7 @@ class faceRecognize():
         self.qtd=1
         self.first_detected=datetime.datetime.now()
         self.last_detected=datetime.datetime.now()
-        self.pricipal_uuid=new_uuid
+        self.principal_uuid=new_uuid
         self.enviroment=enviroment
         
         [path,encoded_string]=self.createFile(picture,location)
@@ -453,7 +453,7 @@ def download_csv():
     output = io.StringIO()
     writer = csv.writer(output)
 
-    arrayToBeSubmited=keep_propertye(known_faces[key_enviroment_url], included_properties=["index","uuid","name","qtd","first_detected","last_detected","enviroment"])
+    arrayToBeSubmited=keep_propertye(known_faces[key_enviroment_url], included_properties=["index","uuid","name","qtd","first_detected","last_detected","enviroment","principal_uuid"])
     # Write the header row (keys of the first dictionary)
     writer.writerow(arrayToBeSubmited[0].keys())
 
@@ -512,7 +512,7 @@ def bind_to_principal_face():
   enviromentFaces:list[faceRecognize]=known_faces[key_enviroment_url]
   #pricipalFace:faceRecognize=[x for x in enviromentFaces if x.uuid==request_data["uuidPrincipal"]]
   faceRepeated:faceRecognize=[x for x in enviromentFaces if x.uuid==request_data["uuid"]].pop()
-  faceRepeated.pricipal_uuid=request_data["uuidPrincipal"]
+  faceRepeated.principal_uuid=request_data["uuidPrincipal"]
   return remove_propertye(known_faces[key_enviroment_url])
   #principal uuid
   #replicante uuid
