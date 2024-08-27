@@ -28,7 +28,7 @@ class faceRecognize():
         self.qtd=1
         self.first_detected=datetime.datetime.now()
         self.last_detected=datetime.datetime.now()
-        self.replicates_uuid=[]
+        self.pricipal_uuid=new_uuid
         self.enviroment=enviroment
         
         [path,encoded_string]=self.createFile(picture,location)
@@ -69,6 +69,10 @@ swagger_config = {
     ],
     "specs": [
         {
+           "version": "0.0.1",
+            "title": "Api v1",
+            "description": 'This api is a proff of concept of the ability to has python face recognition on a REST API',
+            
             "endpoint": 'apispec_1',
             "route": '/apispec_1.json',
             "rule_filter": lambda rule: True,  # all in
@@ -89,7 +93,6 @@ known_faces={}
   
 def validate_before_request(f):
   @wraps(f)
-  
   def decorated_function(*args, **kwargs):
       if "key_enviroment_url" not in request.args:
         return  jsonify("you must especify the key_enviroment"), 401
@@ -218,7 +221,7 @@ def hi():
     returnStr=f"I am alive & counting:{count}"
     return  jsonify(returnStr), 200
 
-@app.route("/api/save",methods=["GET"])
+@app.route("/api/save",methods=["POST"])
 @validate_before_request
 @swag_from({
     'summary': 'Save the known faces data',
@@ -285,19 +288,51 @@ def save():
         }
     }
 })
-
 def load():
     
     global known_faces
-    if "key_enviroment_url" not in request.args:
-        return  jsonify("you must especify the key_enviroment"), 400
 
     key_enviroment_url=request.args["key_enviroment_url"]
 
-    with open(os.path.join("enviroments",key_enviroment_url,'dataset_faces.dat'), 'rb') as f:
-        known_faces[key_enviroment_url] = pickle.load(f)
+    if os.path.isfile(os.path.join("enviroments",key_enviroment_url,'dataset_faces.dat')):
+        with open(os.path.join("enviroments",key_enviroment_url,'dataset_faces.dat'), 'rb') as f:
+            known_faces[key_enviroment_url] = pickle.load(f)
         
-    return jsonify(remove_propertye(known_faces[key_enviroment_url])),200
+    return remove_propertye(known_faces[key_enviroment_url])
+
+@app.route("/api/load_from_memory",methods=["GET"])
+@validate_before_request
+@swag_from({
+    'summary': 'Load the known faces memory server',
+    'description': 'Loads the face recognition data from the server memory.',
+    'parameters': [
+        {
+            'name': 'key_enviroment_url',
+            'in': 'query',
+            'type': 'string',
+            'required': True,
+            'description': 'The key for the environment to load the data.'
+        }
+    ],
+    'responses': {
+        '200': {
+            'description': 'Data loaded successfully',
+            'examples': {
+                'application/json': 'Loaded data example here'
+            }
+        },
+        '400': {
+            'description': 'Invalid key_enviroment'
+        },
+        '500': {
+            'description': 'Internal server error'
+        }
+    }
+})
+def load_from_memory():
+    global known_faces
+    key_enviroment_url=request.args["key_enviroment_url"]
+    return remove_propertye(known_faces[key_enviroment_url])
 
 @app.route("/api/recognize_face",methods=["POST"])
 @validate_before_request
@@ -351,7 +386,6 @@ def load():
         }
     }
 })
-
 def recognize_face():
    
     try:
@@ -362,6 +396,8 @@ def recognize_face():
         if  "files" in request.files :
             image64=request.files["files"]
             image64.save(os.path.join("enviroments",key_enviroment_url,nameIamgeToBeProceced))
+            nameNewFace=request.form["nameNewFace"] if "nameNewFace" in request.form else None
+
             #save file
         elif "imageToRecognize" in request.get_json() :
             data=request.get_json()
@@ -406,7 +442,6 @@ def recognize_face():
         }
     }
 })
-
 def download_csv():
   
   try:
@@ -432,7 +467,7 @@ def download_csv():
   except Exception as e:
     return jsonify({"error": str(e)}), 500
     
-@app.route("/api/bind_replicante",methods=["POST"])
+@app.route("/api/bind_to_principal_face",methods=["POST"])
 @validate_before_request
 @swag_from({
     'summary': 'Bind a replicant face to a principal face',
@@ -469,14 +504,16 @@ def download_csv():
         }
     }
 })
-
-def bind_replicante():
+def bind_to_principal_face():
   
   key_enviroment_url=request.args["key_enviroment_url"]
   request_data=request.get_json()
+  
   enviromentFaces:list[faceRecognize]=known_faces[key_enviroment_url]
-  result=[x for x in enviromentFaces if x.uuid==request_data.uuid]
-  return  jsonify(result)
+  #pricipalFace:faceRecognize=[x for x in enviromentFaces if x.uuid==request_data["uuidPrincipal"]]
+  faceRepeated:faceRecognize=[x for x in enviromentFaces if x.uuid==request_data["uuid"]].pop()
+  faceRepeated.pricipal_uuid=request_data["uuidPrincipal"]
+  return remove_propertye(known_faces[key_enviroment_url])
   #principal uuid
   #replicante uuid
   #find int the database the principal object
@@ -519,7 +556,6 @@ def bind_replicante():
         }
     }
 })
-
 def delete_face():
     
     key_enviroment_url=request.args["key_enviroment_url"]
@@ -574,7 +610,6 @@ def delete_face():
         }
     }
 })
-
 def update_face_name():
     
         
