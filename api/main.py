@@ -1,6 +1,7 @@
 import csv
 from functools import wraps
 import io
+from PIL import Image
 import face_recognition
 import base64
 from flask import Flask, Response, request, send_file,jsonify
@@ -57,6 +58,7 @@ class faceRecognize():
         path=os.path.join("enviroments",self.enviroment, "faces",fileName)
         cv2.imwrite(path, cropped)
         
+
         with open(path, "rb") as image_file:
             encoded_string ="data:image/jpeg;base64,"+str( base64.b64encode(image_file.read()), encoding='ascii')
         return path,encoded_string
@@ -392,19 +394,30 @@ def recognize_face():
         key_enviroment_url=request.args["key_enviroment_url"]
         ipaddress=request.args["ipaddress"]
         
-        nameIamgeToBeProceced:str=f"imageToProcess{ipaddress}.jpeg"
+        nameIamgeToBeProceced:str=f"imageToProcess{ipaddress}"
         if  "files" in request.files :
+            nameIamgeToBeProceced+=".jpeg"
             image64=request.files["files"]
             image64.save(os.path.join("enviroments",key_enviroment_url,nameIamgeToBeProceced))
             nameNewFace=request.form["nameNewFace"] if "nameNewFace" in request.form else None
-
-            #save file
         elif "imageToRecognize" in request.get_json() :
             data=request.get_json()
             image64=data["imageToRecognize"]
-            image64=image64.replace("data:image/jpeg;base64,","")
-            image_64_decode = base64.b64decode(image64) 
+            
+            if  "png" in image64 :
+                image64=image64.replace("data:image/png;base64,","")
+                image64 = converte_PNG_TO_JPEG(image64)
+                nameIamgeToBeProceced+=".png"
+            elif "jpg" in image64 or "jpeg" in image64:
+                nameIamgeToBeProceced+=".jpeg"
+                image64=image64.replace("data:image/jpeg;base64,","")
+            else:
+                return jsonify({"error: ony PNG and JPEG or JPG are supported so far on this API"}), 500
+              
+            
+            image_64_decode = base64.b64decode(image64)
             nameNewFace=data["nameNewFace"] if "nameNewFace" in data else None
+           
 
             with open(os.path.join("enviroments",key_enviroment_url, nameIamgeToBeProceced), "wb") as fh:
                 fh.write(image_64_decode) 
@@ -415,6 +428,23 @@ def recognize_face():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+def converte_PNG_TO_JPEG(image64):
+    png_base64_string = image64#"your_base64_encoded_png_string_here"
+
+            # Step 1: Decode the Base64 string into binary data
+    png_data = base64.b64decode(png_base64_string)
+
+            # Step 2: Open the binary data as an image using Pillow
+    png_image = Image.open(io.BytesIO(png_data))
+
+            # Step 3: Convert the image to JPEG format and save it to a bytes buffer
+    jpeg_buffer = io.BytesIO()
+    png_image.convert("RGB").save(jpeg_buffer, format="JPEG")
+
+            # Step 4: Encode the JPEG image in the bytes buffer to a Base64 string
+    jpeg_base64_string = base64.b64encode(jpeg_buffer.getvalue()).decode('utf-8')
+    return jpeg_base64_string
 
 @app.route("/api/download_csv",methods=["GET"])
 @validate_before_request

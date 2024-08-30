@@ -1,28 +1,16 @@
-#sudo docker build  -t "angelocarlotto/face_recognition_api:latest" .
-#docker push angelocarlotto/face_recognition_api:latest
-#docker run --rm  -p 5001:5000  angelocarlotto/face_recognition_api:latest
-# Use the official Ubuntu base image
-FROM face_recognition_api_2nd:v0.1
+#sudo docker build  -t "face_recognition_api_2nd:v0.1" .
+#sudo docker buildx build --platform=linux/arm64,linux/amd64/v2 -t angelocarlotto/face_recognition_api_2nd:latest_mult . --push
+#sudo docker buildx build --platform=linux/arm64 -t angelocarlotto/face_recognition_api_2nd:latest_arm64 . --push
+#sudo docker buildx build --platform=linux/amd64/v2 -t angelocarlotto/face_recognition_api_2nd:latest_amd64 . --push
+#FROM face_recognition_api_1th:v0.1
+FROM angelocarlotto/face_recognition_api_1th:latest_arm64
 
-# Prevents prompts during package installations
-ENV DEBIAN_FRONTEND=noninteractive
-ENV FLASK_APP=face_recognition_api/api/main.py
-ENV FLASK_DEBUG=1
+# Set the working directory
+WORKDIR /app
 
+# Install the Python packages from the requirements file
+RUN  python3 -m venv venv && \
+    . venv/bin/activate && \
+    pip3 install --upgrade pip && \
+    pip3 install Flask flask_cors Pillow flasgger opencv-python opencv-python-headless wheel dlib face_recognition setuptools
 
-EXPOSE 5000
-
-ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
-
-RUN git clone https://github.com/angelocarlotto/face_recognition_api.git
-
-
-#COPY entrypoint.sh .
-RUN chmod +x face_recognition_api/entrypoint.sh
-
-RUN mkdir enviroments
-RUN chmod -R 777 enviroments
-# Set the default command to run the application
-
-#CMD [".", "venv/bin/activate", "&&", "flask", "run", "--host=0.0.0.0"]
-ENTRYPOINT ["face_recognition_api/entrypoint.sh"]
