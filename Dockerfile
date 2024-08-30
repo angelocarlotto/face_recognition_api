@@ -1,16 +1,18 @@
-#sudo docker build  -t "face_recognition_api_2nd:v0.1" .
-#sudo docker buildx build --platform=linux/arm64,linux/amd64/v2 -t angelocarlotto/face_recognition_api_2nd:latest_mult . --push
-#sudo docker buildx build --platform=linux/arm64 -t angelocarlotto/face_recognition_api_2nd:latest_arm64 . --push
-#sudo docker buildx build --platform=linux/amd64/v2 -t angelocarlotto/face_recognition_api_2nd:latest_amd64 . --push
-#FROM face_recognition_api_1th:v0.1
-FROM angelocarlotto/face_recognition_api_1th:latest_arm64
+#sudo docker buildx build --platform=linux/arm64,linux/amd64/v2 -t angelocarlotto/face_recognition_api_1th:latest_mult . --load 
+#sudo docker buildx build --platform=linux/amd64/v2 -t angelocarlotto/face_recognition_api_1th:latest_amd64 . --load
+#sudo docker buildx build --platform=linux/arm64 -t angelocarlotto/face_recognition_api_1th:latest_arm64 . --load
+FROM ubuntu
 
-# Set the working directory
-WORKDIR /app
 
-# Install the Python packages from the requirements file
+# Update the package list and install dependencies
+RUN apt-get update && apt-get install -y -q --allow-unauthenticated \
+    cmake \
+    python3 \
+    python3-pip \
+    python3-dev \
+    python3.12-venv
+
 RUN  python3 -m venv venv && \
     . venv/bin/activate && \
     pip3 install --upgrade pip && \
-    pip3 install Flask flask_cors Pillow flasgger opencv-python opencv-python-headless wheel dlib face_recognition setuptools
-
+    pip3 install face_recognition setuptools

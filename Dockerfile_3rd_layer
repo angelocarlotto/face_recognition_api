@@ -2,8 +2,9 @@
 #docker push angelocarlotto/face_recognition_api:latest
 #docker run --rm  -p 5001:5000  angelocarlotto/face_recognition_api:latest
 
-#sudo docker buildx build --platform linux/arm64,linux/amd64/v2 -t angelocarlotto/face_recognition_api:latest_mult . --load
-#sudo docker buildx build --platform linux/arm64 -t angelocarlotto/face_recognition_api:latest_arm64 . --push
+#sudo docker buildx build --platform=linux/arm64,linux/amd64/v2 -t angelocarlotto/face_recognition_api:latest_mult . --load
+#sudo docker buildx build --platform=linux/amd64/v2 -t angelocarlotto/face_recognition_api:latest_amd . --push
+#sudo docker buildx build --platform=linux/arm64 -t angelocarlotto/face_recognition_api:latest_arm64 . --push
 #docker push angelocarlotto/face_recognition_api:latest_amd64
 # Use the official Ubuntu base image
 FROM angelocarlotto/face_recognition_api_2nd:latest_arm64
