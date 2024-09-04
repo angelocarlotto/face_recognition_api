@@ -29,6 +29,10 @@ class faceRecognize():
         self.qtd=1
         self.first_detected=datetime.datetime.now()
         self.last_detected=datetime.datetime.now()
+        
+        '''
+        if the face is not grouped, this property will have the same value as uuid property. If it is grouped this property will have the uuid value from the main face.
+        '''
         self.principal_uuid=new_uuid
         self.enviroment=enviroment
         
@@ -592,12 +596,8 @@ def delete_face():
     
     try:
         data=request.get_json()
-        uuid=data["uuid"]
-        itemToBeRemoved=None
-        for x in known_faces[key_enviroment_url]:
-            if x.uuid==uuid:
-                itemToBeRemoved=x
-        known_faces[key_enviroment_url].remove(itemToBeRemoved)
+        uuidToBeRemoved=data["uuid"]
+        known_faces[key_enviroment_url]=itemsToBeleted= [child for child in known_faces[key_enviroment_url] if child.principal_uuid!=uuidToBeRemoved]
         return remove_propertye(known_faces[key_enviroment_url])
     except Exception as e:
           return jsonify({"error": str(e)}), 500

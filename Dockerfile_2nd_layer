@@ -1,7 +1,7 @@
 #sudo docker build  -t "face_recognition_api_2nd:v0.1" .
-#sudo docker buildx build --platform=linux/arm64,linux/amd64/v2 -t angelocarlotto/face_recognition_api_2nd:latest_mult . --push
+#sudo docker buildx build --platform=linux/arm64,linux/amd64 -t angelocarlotto/face_recognition_api_2nd:latest_mult . --push
 #sudo docker buildx build --platform=linux/arm64 -t angelocarlotto/face_recognition_api_2nd:latest_arm64 . --push
-#sudo docker buildx build --platform=linux/amd64/v2 -t angelocarlotto/face_recognition_api_2nd:latest_amd64 . --push
+#sudo docker buildx build --platform=linux/amd64 -t angelocarlotto/face_recognition_api_2nd:latest_amd64 . --push
 #FROM face_recognition_api_1th:v0.1
 #FROM angelocarlotto/face_recognition_api_1th:latest_arm64
 FROM angelocarlotto/face_recognition_api_1th:latest_amd64
