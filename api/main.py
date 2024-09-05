@@ -77,7 +77,7 @@ swagger_config = {
         {
            "version": "0.0.1",
             "title": "Api v1",
-            "description": 'This api is a proff of concept of the ability to has python face recognition on a REST API',
+            "description": 'This api is a proff of concept of the ability to has python face recognition on a REST API. You can find the whole source code on this repository: https://github.com/angelocarlotto/face_recognition_api',
             
             "endpoint": 'apispec_1',
             "route": '/apispec_1.json',
