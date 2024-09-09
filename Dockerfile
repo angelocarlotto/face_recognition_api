@@ -12,23 +12,24 @@ FROM angelocarlotto/face_recognition_api_2nd:latest_arm64
 
 # Prevents prompts during package installations
 ENV DEBIAN_FRONTEND=noninteractive
-ENV FLASK_APP=face_recognition_api/api/main.py
+ENV FLASK_APP=api/main.py
 ENV FLASK_DEBUG=1
 
 
 EXPOSE 5000
 
-ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+#ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
 
-RUN git clone https://github.com/angelocarlotto/face_recognition_api.git
+#RUN git clone https://github.com/angelocarlotto/face_recognition_api.git
 
+COPY . .
 
 #COPY entrypoint.sh .
-RUN chmod +x face_recognition_api/entrypoint.sh
+RUN chmod +x entrypoint.sh
 
-RUN mkdir enviroments
+#RUN mkdir enviroments
 RUN chmod -R 777 enviroments
 # Set the default command to run the application
 
 #CMD [".", "venv/bin/activate", "&&", "flask", "run", "--host=0.0.0.0"]
-ENTRYPOINT ["face_recognition_api/entrypoint.sh"]
+ENTRYPOINT ["entrypoint.sh"]
