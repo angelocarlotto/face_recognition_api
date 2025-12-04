@@ -45,8 +45,9 @@ RUN chmod +x entrypoint.sh
 # Create and set permissions for environments directory
 RUN mkdir -p enviroments && chmod -R 777 enviroments
 
-# Expose the Flask port
+# Expose the Flask port (can be overridden by PORT env var)
 EXPOSE 5000
+ENV PORT=5000
 
 # Set the entrypoint
 ENTRYPOINT ["./entrypoint.sh"]

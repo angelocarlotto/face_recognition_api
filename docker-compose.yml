@@ -6,7 +6,7 @@ services:
     image: face_recognition_api:latest
     container_name: face_recognition_api
     ports:
-      - "5001:5000"
+      - "${PORT:-5001}:5000"
     volumes:
       # Mount the environments directory to persist face data
       - ./enviroments:/enviroments
@@ -16,6 +16,7 @@ services:
       - FLASK_APP=api/main.py
       - FLASK_DEBUG=1
       - DEBIAN_FRONTEND=noninteractive
+      - PORT=${PORT:-5000}
     restart: unless-stopped
     networks:
       - face-recognition-network
