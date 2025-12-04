@@ -1,0 +1,25 @@
+services:
+  face-recognition-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.standalone
+    image: face_recognition_api:latest
+    container_name: face_recognition_api
+    ports:
+      - "5001:5000"
+    volumes:
+      # Mount the environments directory to persist face data
+      - ./enviroments:/enviroments
+      # Mount the API code for development (optional, comment out for production)
+      - ./api:/api
+    environment:
+      - FLASK_APP=api/main.py
+      - FLASK_DEBUG=1
+      - DEBIAN_FRONTEND=noninteractive
+    restart: unless-stopped
+    networks:
+      - face-recognition-network
+
+networks:
+  face-recognition-network:
+    driver: bridge

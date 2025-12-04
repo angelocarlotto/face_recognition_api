@@ -8,7 +8,8 @@
 #docker push angelocarlotto/face_recognition_api:latest_amd64
 # Use the official Ubuntu base image
 #FROM angelocarlotto/face_recognition_api_2nd:latest_amd64
-FROM angelocarlotto/face_recognition_api_2nd:latest_arm64
+#FROM angelocarlotto/face_recognition_api_2nd:latest_arm64
+FROM face_recognition_api_2nd:latest_amd64
 
 # Prevents prompts during package installations
 ENV DEBIAN_FRONTEND=noninteractive
